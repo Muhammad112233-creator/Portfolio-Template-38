@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets: keep real keys out of the repository
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# hosting
+.vercel
+.netlify
+
+# operating systems and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
