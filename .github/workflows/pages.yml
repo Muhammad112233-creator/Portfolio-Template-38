@@ -1,0 +1,73 @@
+# Builds the site and publishes it to GitHub Pages on every push to "main".
+#
+# One-time setup: in the repository, open Settings → Pages and set
+# "Source" to "GitHub Actions". That is all.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# let a running deployment finish, but skip the ones queued behind it
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build the static site
+        run: npm run build
+        env:
+          # "/<repo>" for project sites, empty for user sites and custom domains
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_WEB3FORMS_KEY: ${{ vars.NEXT_PUBLIC_WEB3FORMS_KEY }}
+          NEXT_PUBLIC_HCAPTCHA_SITEKEY: ${{ vars.NEXT_PUBLIC_HCAPTCHA_SITEKEY }}
+
+      # GitHub Pages ignores folders that start with "_" unless this file exists
+      - name: Keep the _next folder
+        run: touch out/.nojekyll
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
