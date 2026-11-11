@@ -1,0 +1,501 @@
+// Client work: a strip of films on a dark stage. Scrolling runs the film in
+// the middle like a hand-cranked viewer, then slides the next one in.
+
+.works {
+  position: relative;
+  z-index: 4;
+  isolation: isolate;
+  color: var(--ink);
+  background: var(--void);
+
+  &[data-still='false'] {
+    height: calc(var(--rail-screens) * var(--screen));
+  }
+}
+
+.stage {
+  --frame-w: min(56vw, (var(--screen) - var(--rail-clear) - 17rem) * 16 / 9);
+  --frame-gap: 7vw;
+
+  position: sticky;
+  top: 0;
+  height: var(--screen);
+  overflow: hidden;
+  background: var(--void);
+
+  @media (max-width: 48rem) {
+    --frame-w: min(100vw - 2 * var(--gutter) - 1.5rem, (var(--screen) - var(--rail-clear) - 17rem) * 16 / 9);
+    --frame-gap: 4vw;
+  }
+}
+
+.deck {
+  position: absolute;
+  inset: 0 0 var(--rail-clear);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: clamp(1rem, 3vh, 2rem);
+}
+.column {
+  position: relative;
+  width: var(--frame-w);
+}
+
+// ── caption ────────────────────────────────────────────────
+.captions {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  min-height: clamp(1.25rem, 2.4vw, 2.1rem);
+  margin-bottom: clamp(3.4rem, 10.3vh, 5.8rem);
+}
+.caption {
+  grid-area: 1 / 1;
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(1.25rem, 2.4vw, 2.1rem);
+  font-weight: var(--w-display);
+  line-height: var(--lead-tight);
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5em);
+  transition:
+    opacity 0.24s var(--e-out),
+    transform 0.4s var(--e-out),
+    visibility 0s linear 0.4s;
+
+  &[data-active='true'] {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity 0.4s var(--e-out) 0.12s,
+      transform 0.6s var(--e-out) 0.12s,
+      visibility 0s;
+  }
+}
+.infoTrigger {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.3em;
+  padding: 0;
+  border: 0;
+  color: currentColor;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: opacity var(--d-fast) var(--e-out);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    transform: translateY(-50%);
+  }
+  &:hover {
+    opacity: 0.64;
+  }
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 4px;
+    opacity: 1;
+  }
+}
+.infoMark {
+  margin-top: -0.08em;
+  font-size: 0.48em;
+  font-style: italic;
+  font-weight: var(--w-ui);
+  line-height: 1;
+  text-transform: lowercase;
+  opacity: 0.52;
+}
+.infoDescription {
+  position: absolute;
+  top: calc(100% + 0.85rem);
+  left: 0;
+  z-index: 8;
+  width: min(30rem, 100%);
+  color: var(--paper);
+  font-size: max(0.875rem, var(--t-ui));
+  font-weight: var(--w-ui);
+  line-height: var(--lead-read);
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+
+  > span {
+    display: block;
+    padding: 0 0 0.75rem;
+    background: var(--void);
+  }
+  small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: var(--t-label);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+}
+
+// ── the strip of frames ────────────────────────────────────
+.viewer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.strip {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(calc(var(--pos, 0) * -1 * (100% + var(--frame-gap))), 0, 0);
+  will-change: transform;
+}
+.slide {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) * (100% + var(--frame-gap)));
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  background: #000;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 4px;
+  }
+
+  img,
+  video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  video {
+    opacity: 0;
+
+    &[data-ready='true'] {
+      opacity: 1;
+    }
+  }
+}
+// films waiting their turn sit in the dark
+.slideShade {
+  position: absolute;
+  inset: 0;
+  background: var(--void);
+  opacity: var(--dim, 0.7);
+  pointer-events: none;
+}
+
+.play {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: clamp(3.4rem, 5vw, 4.4rem);
+  height: clamp(3.4rem, 5vw, 4.4rem);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  visibility: hidden;
+  opacity: 0;
+  cursor: pointer;
+  transform: translate(-50%, -50%) scale(0.86);
+  transition:
+    opacity var(--d-fast) var(--e-out),
+    transform var(--d-fast) var(--e-out),
+    visibility 0s linear var(--d-fast);
+
+  svg {
+    width: 42%;
+    height: 42%;
+    margin-left: 6%;
+  }
+  &[data-live='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    transition:
+      opacity var(--d-fast) var(--e-out),
+      transform var(--d-fast) var(--e-out),
+      visibility 0s;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 4px;
+  }
+}
+
+// ── transport ──────────────────────────────────────────────
+.rail {
+  position: relative;
+  z-index: 2;
+  padding-top: clamp(1.6rem, 5vh, 2.8rem);
+  pointer-events: none;
+}
+.railLine {
+  position: relative;
+  display: block;
+  height: 1px;
+  background: color-mix(in srgb, var(--paper) 22%, transparent);
+}
+.railFill {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  transform: scaleX(0);
+  transform-origin: 0;
+}
+.railHead {
+  position: absolute;
+  top: -0.3rem;
+  left: 0;
+  width: 1px;
+  height: 0.7rem;
+  background: var(--paper);
+}
+.railClock {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.55rem;
+  color: var(--paper);
+  font-size: var(--t-label);
+  font-weight: var(--w-ui);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-label);
+  opacity: 0.62;
+}
+.railTotal {
+  opacity: 0.66;
+}
+.railFill,
+.railHead,
+.railClock {
+  transition: opacity var(--d-fast) var(--e-out);
+}
+.rail[data-beat='tail'] {
+  .railFill,
+  .railHead {
+    opacity: 0.3;
+  }
+  .railClock {
+    opacity: 0.85;
+  }
+  .railClock > :first-child {
+    text-transform: uppercase;
+  }
+}
+
+.cue {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: clamp(0.7rem, 2.2vh, 1.25rem) 0 0;
+  color: var(--paper);
+  font-size: var(--t-label);
+  font-weight: var(--w-ui);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--d-fast) var(--e-out);
+
+  [data-copy],
+  .cueTouch {
+    display: none;
+  }
+  &[data-phase='invite'] [data-copy='invite'],
+  &[data-phase='keep'] [data-copy='keep'],
+  &[data-phase='play'] [data-copy='play'],
+  &[data-phase='tail'] [data-copy='tail'] {
+    display: inline;
+  }
+  &[data-phase='invite'],
+  &[data-phase='play'],
+  &[data-phase='tail'] {
+    opacity: 1;
+  }
+  &[data-phase='keep'] {
+    opacity: 0.62;
+  }
+  &[data-phase='play'] .cueArrow {
+    display: none;
+  }
+  &[data-phase='play'] .cuePlay {
+    display: block;
+  }
+}
+@media (pointer: coarse) {
+  .cueMouse {
+    display: none;
+  }
+  .cue .cueTouch {
+    display: inline;
+  }
+}
+.cueGlyph {
+  position: relative;
+  display: grid;
+  flex: 0 0 0.9rem;
+  place-items: center;
+  width: 0.9rem;
+  height: 1.25rem;
+  opacity: 0.72;
+
+  svg {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+.cueArrow {
+  animation: nudge 1.9s var(--e-in-out) infinite;
+}
+.cuePlay {
+  display: none;
+  fill: currentColor !important;
+  stroke: none !important;
+}
+.cueLabel {
+  min-width: 0;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+@keyframes nudge {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(-12%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(12%);
+  }
+}
+
+// a thin line that points on to the next section once the reel has ended
+.tailLine {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 50%;
+  z-index: 2;
+  width: 1px;
+  height: 120px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--paper) 34%, transparent), transparent);
+  pointer-events: none;
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+// ── plain list, used when motion is reduced ────────────────
+.list {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: clamp(2rem, 6vh, 3.5rem);
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: clamp(3rem, 10vh, 6rem) var(--gutter);
+  list-style: none;
+}
+.listItem {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+.listButton {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: var(--paper);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #000;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 6px;
+  }
+}
+.listDetails {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+.listLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.9rem;
+}
+.listDiscipline {
+  font-size: clamp(1.05rem, 2vw, 1.65rem);
+  font-weight: var(--w-display);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.listTitle {
+  font-size: var(--t-ui);
+  font-weight: var(--w-ui);
+  opacity: 0.82;
+}
+.listContext {
+  max-width: 52ch;
+  margin: 0;
+  font-size: var(--t-ui);
+  line-height: var(--lead-read);
+}
+.listCredit {
+  margin: 0;
+  font-size: var(--t-label);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cueArrow {
+    animation: none;
+  }
+}

@@ -1,0 +1,264 @@
+// ─────────────────────────────────────────────────────────────
+//  Fonts — all self-hosted, all under the SIL Open Font License
+// ─────────────────────────────────────────────────────────────
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('../fonts/Figtree-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Figtree';
+  font-style: italic;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('../fonts/Figtree-Italic-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/Anton-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/Cinzel-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Special Elite';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/SpecialElite-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/Caveat-Bold.woff2') format('woff2');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Tokens
+// ─────────────────────────────────────────────────────────────
+:root {
+  --paper: #f3f3ef;
+  --gallery: #ebebeb;
+  --ink: #10100f;
+  --blue: #2f53ff;
+  --purple: #7d3fef;
+  --blue-soft: #99a8ff;
+  --cyan: #19d9f3;
+  --night: #020b18;
+  --void: #01040b;
+  --sky: #020408;
+  --grain: 0.6;
+
+  --line: color-mix(in srgb, var(--ink) 16%, transparent);
+  --muted: color-mix(in srgb, var(--ink) 60%, transparent);
+  --paper-muted: color-mix(in srgb, var(--paper) 76%, transparent);
+
+  --font: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --w-regular: 400;
+  --w-ui: 500;
+  --w-display: 600;
+  --w-strong: 700;
+
+  --track-label: 0.07em;
+  --track-display: -0.083em;
+  --lead-solid: 0.84;
+  --lead-tight: 0.96;
+  --lead-read: 1.42;
+
+  --t-label: clamp(0.625rem, 0.589286rem + 0.178571vw, 0.75rem);
+  --t-ui: clamp(0.75rem, 0.714286rem + 0.178571vw, 0.875rem);
+  --t-body: clamp(0.95rem, 0.9rem + 0.25vw, 1.125rem);
+
+  --gutter: clamp(1rem, 0.571429rem + 2.14286vw, 2.5rem);
+  --screen: 100vh;
+  --chrome: 0px;
+  --rail-inset: clamp(2.2rem, 1.8rem + 2vw, 3.6rem);
+  --rail-h: 3.4rem;
+  --rail-clear: calc(var(--rail-inset) + var(--rail-h) + var(--chrome));
+
+  --d-instant: 0.1s;
+  --d-fast: 0.18s;
+  --d-normal: 0.36s;
+  --d-slow: 0.64s;
+  --d-cine: 0.96s;
+
+  --e-standard: cubic-bezier(0.2, 0, 0, 1);
+  --e-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --e-editorial: cubic-bezier(0.76, 0, 0.24, 1);
+  --e-aperture: cubic-bezier(0.62, 0.04, 0.14, 1);
+
+  // film grain tiles; sections lay these over their backgrounds
+  --grain-light: url('./grain-light.png');
+  --grain-dark: url('./grain-dark.png');
+
+  --z-content: 1;
+  --z-nav: 20;
+  --z-overlay: 40;
+  --z-loader: 60;
+  --z-player: 80;
+}
+
+@supports (height: 100lvh) {
+  :root {
+    --screen: 100lvh;
+    --chrome: calc(100lvh - 100svh);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Reset
+// ─────────────────────────────────────────────────────────────
+:where(*, *::before, *::after) {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  min-height: 100%;
+  color-scheme: light;
+  background: var(--void);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-text-size-adjust: 100%;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+html.is-locked {
+  overflow: hidden;
+}
+
+// Lenis
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+body {
+  min-width: min(20rem, 100vw);
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--void);
+  font-family: var(--font);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#main-content {
+  overflow-x: clip;
+}
+#main-content:focus {
+  outline: none;
+}
+@media (pointer: coarse) {
+  #main-content {
+    touch-action: pan-y pinch-zoom;
+  }
+}
+
+:where(img, picture, video, canvas, svg) {
+  display: block;
+  max-inline-size: 100%;
+}
+:where(button, input, textarea, select) {
+  color: inherit;
+  font: inherit;
+}
+:where(ul, ol) {
+  padding: 0;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 0.25rem;
+}
+::selection {
+  color: var(--paper);
+  background: var(--blue);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 2147483647;
+  padding: 0.8rem 1rem;
+  color: #111;
+  background: #fff;
+  border-radius: 0.25rem;
+  transform: translateY(calc(-100% - 2rem));
+}
+.skip-link:focus {
+  transform: none;
+}
+
+// Split text helpers (words keep their mask, characters stay inline)
+.split-line {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+// Plain fallback shown inside <noscript> (see app/page.tsx)
+.plain {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  color: var(--paper);
+  line-height: 1.5;
+
+  h1,
+  h2 {
+    margin: 2rem 0 0.5rem;
+    line-height: 1.1;
+  }
+  a {
+    color: var(--blue-soft);
+  }
+  ul {
+    padding-left: 1.2rem;
+  }
+}

@@ -1,0 +1,471 @@
+// The intro overlay, the hero "set" behind it and the copy on top.
+
+.shell {
+  position: relative;
+  min-height: 600svh; // five screens of walking before the page begins
+  background: var(--ink);
+  overflow: clip;
+
+  &[data-static='true'] {
+    min-height: 200svh;
+  }
+}
+
+.arrival {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--screen);
+  min-height: var(--screen);
+  overflow: hidden;
+  background: #02030f;
+  opacity: 0.01;
+  clip-path: circle(0);
+  transform: scale(1.06);
+  transition: transform 1.56s var(--e-out);
+  will-change: transform;
+
+  .shell[data-phase='dissolving'] &,
+  .shell[data-phase='arriving'] &,
+  .shell[data-phase='fallback'] &,
+  .shell[data-phase='complete'] & {
+    opacity: 1;
+    clip-path: none;
+    transform: scale(1);
+    transition-timing-function: var(--e-aperture);
+  }
+}
+
+.arrivalInner {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50%;
+  will-change: transform, opacity, filter;
+}
+
+// ── the photograph + its canvas ─────────────────────────────
+.scene {
+  position: absolute;
+  inset: 0;
+  background: #02030f;
+}
+.scenePoster,
+.sceneCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.scenePoster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+.sceneCanvas {
+  opacity: 0;
+  transition: opacity 0.6s var(--e-out);
+
+  &[data-ready='true'] {
+    opacity: 1;
+  }
+}
+.sceneShade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #02030fb8 0%, #02030f52 26%, #0000 52%),
+    linear-gradient(0deg, #02030f8f 0%, #0000 30%);
+}
+
+// ── overlay ────────────────────────────────────────────────
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loader);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--paper);
+  background: #03030b;
+
+  &[data-phase='dissolving'],
+  &[data-phase='arriving'] {
+    background: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(circle, #0000 0 28%, #0101081f 72%),
+      linear-gradient(110deg, #265cff0a, #0000 42% 58%, #783eff0a);
+    transition: opacity 0.42s var(--e-out);
+  }
+  &[data-phase='dissolving']::after,
+  &[data-phase='arriving']::after {
+    display: none;
+  }
+}
+
+.portal,
+.portalFallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.portal {
+  z-index: 1;
+  display: block;
+}
+
+// Shown when WebGL is missing: the same idea, drawn with gradients.
+.portalFallback {
+  overflow: hidden;
+  background:
+    radial-gradient(circle, #f0f5ffc7 0 0.35%, #2b66ff47 3%, #0000 14%),
+    radial-gradient(circle at 46%, #1037be94 0 18%, #0000 58%),
+    radial-gradient(circle at 57% 48%, #6730e352 0 12%, #0000 54%), #03030d;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 96vmax;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    translate: -50% -50%;
+    opacity: 0.66;
+    filter: blur(14px) saturate(1.12);
+    background: conic-gradient(
+      from 22deg,
+      #0000 0deg,
+      #113fdc2e 34deg,
+      #236dff94 92deg,
+      #7339f957 147deg,
+      #0000 215deg,
+      #411b9542 302deg,
+      #0000 360deg
+    );
+    mask-image: radial-gradient(circle, #0000 0 8%, #000 15% 44%, #0000 72%);
+    animation: swirl 7.2s linear infinite;
+  }
+}
+
+.hud {
+  position: absolute;
+  bottom: var(--gutter);
+  left: var(--gutter);
+  z-index: 2;
+  transition:
+    opacity 0.46s var(--e-out),
+    transform 0.76s var(--e-aperture);
+
+  .overlay[data-phase='diving'] &,
+  .overlay[data-phase='dissolving'] &,
+  .overlay[data-phase='arriving'] &,
+  .overlay[data-phase='complete'] & {
+    opacity: 0;
+    transform: translateY(2.4rem);
+  }
+}
+
+.percent {
+  color: #f3f6ffb8;
+  font-size: clamp(2.6rem, 4.8vw, 4.8rem);
+  font-weight: 470;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.82;
+  letter-spacing: -0.075em;
+  text-shadow: 0 0 2.2rem #3f66ff47;
+
+  .overlay[data-phase='rupturing'] &,
+  .overlay[data-phase='holding'] & {
+    color: #f7f9ffe6;
+  }
+
+  @media (max-width: 46rem) {
+    font-size: clamp(3rem, 12.5vw, 4.8rem);
+  }
+}
+
+@keyframes swirl {
+  0% {
+    transform: rotate(0) scale(0.88);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.04);
+  }
+  100% {
+    transform: rotate(360deg) scale(0.88);
+  }
+}
+
+// ── hero copy ──────────────────────────────────────────────
+.interface {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-content);
+  color: var(--paper);
+  pointer-events: none;
+}
+
+.copy {
+  position: absolute;
+  top: 50%;
+  right: var(--gutter);
+  left: var(--gutter);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(0.8rem, 1.4vw, 1.2rem);
+  opacity: 0;
+  transform: translateY(calc(2.4rem - 50%));
+  transition:
+    opacity 1.18s var(--e-out) 40ms,
+    transform 1.64s var(--e-aperture) 20ms;
+
+  .interface[data-active='true'] & {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
+
+// fades as the walk begins (the variable is written by the scroll handler)
+.copyFade {
+  opacity: calc(1 - clamp(0, (var(--walk, 0) - 0.02) * 7, 1));
+}
+
+.text {
+  position: relative;
+  width: max-content;
+  max-width: calc(100% - 2.2rem);
+  text-align: left;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  color: #f7f7f4f0;
+  font-size: clamp(2.9rem, 4.6vw, 4.8rem);
+  line-height: 0.86;
+  font-kerning: normal;
+  text-rendering: geometricPrecision;
+  text-shadow: 0 0.08em 0.55em #02030f61;
+}
+.name {
+  font-weight: 650;
+  letter-spacing: -0.058em;
+}
+.role {
+  margin-top: clamp(0.6rem, 0.8vw, 0.85rem);
+  color: #f3f3ef8a;
+  font-size: clamp(0.82rem, 1.05vw, 1.02rem);
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.focus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 34rem;
+  margin-top: clamp(1.15rem, 1.7vw, 1.6rem);
+  color: #f3f3efb8;
+  text-align: left;
+}
+.focusLead {
+  color: #f3f3ef94;
+  font-size: clamp(0.66rem, 0.82vw, 0.82rem);
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.keyword {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  width: min(14ch, 100vw - 4rem);
+  margin-top: 0.58em;
+  color: #f9f7f2f5;
+  font-size: clamp(1.3rem, 2.1vw, 2.2rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-align: left;
+  text-shadow: 0 0.08em 0.55em #02030f52;
+  white-space: nowrap;
+}
+.keywordWord {
+  display: inline-block;
+  min-height: 0.82em;
+}
+
+.cue {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: calc(100vw - 2 * var(--gutter));
+  margin: 0;
+  color: #f3f3efc2;
+  font-size: 0.64rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.18s var(--e-out),
+    visibility 0s linear 0.18s;
+
+  svg {
+    width: 0.75rem;
+    height: 1.25rem;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &[data-visible='true'] {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity 0.48s var(--e-out) 0.22s,
+      visibility 0s;
+
+    svg {
+      animation: cue-step 2.6s var(--e-editorial) 0.7s 2;
+    }
+  }
+}
+.cueStart {
+  position: absolute;
+  top: calc(100% + clamp(1.7rem, 3vh, 2.4rem));
+  left: 0;
+}
+.cueWalk {
+  position: fixed;
+  bottom: calc(var(--rail-inset) + var(--rail-h) / 2);
+  left: 50%;
+  z-index: var(--z-nav);
+  text-align: center;
+  transform: translate(-50%, 50%);
+
+  svg {
+    order: 2;
+  }
+}
+.cueTouch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .cueMouse {
+    display: none;
+  }
+  .cueTouch {
+    display: inline;
+  }
+}
+
+@keyframes cue-step {
+  0%,
+  65%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(0.3rem);
+  }
+}
+
+.credit {
+  position: absolute;
+  top: 50%;
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: #f3f3ef9e;
+  font-size: var(--t-label);
+  font-weight: 560;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  writing-mode: vertical-rl;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%) rotate(180deg);
+  transition: opacity 0.72s var(--e-out) 0.76s;
+
+  .interface[data-active='true'] & {
+    opacity: 1;
+  }
+
+  svg {
+    width: 1.05rem;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65px;
+    vector-effect: non-scaling-stroke;
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 46rem) and (orientation: portrait) {
+  .copy {
+    top: auto;
+    bottom: calc(var(--rail-clear) + 4.5rem);
+    transform: translateY(2.4rem);
+
+    .interface[data-active='true'] & {
+      transform: none;
+    }
+  }
+  .credit {
+    top: 38%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell {
+    min-height: var(--screen);
+  }
+  .arrival,
+  .hud,
+  .copy,
+  .credit {
+    transition-duration: 1ms;
+  }
+  .portalFallback::before {
+    animation: none;
+  }
+  .cue,
+  .cue[data-visible='true'] {
+    transition: none;
+
+    svg {
+      animation: none;
+    }
+  }
+  .cueWalk {
+    display: none;
+  }
+}

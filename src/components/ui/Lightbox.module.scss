@@ -1,0 +1,405 @@
+// The full player. A native <dialog>, so focus trapping, Escape and the
+// top layer come for free.
+
+.lightbox {
+  --pad: 1.25rem;
+  --bar: 0px;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-player);
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--pad);
+  overflow: hidden;
+  border: 0;
+  color: var(--paper);
+  background: none;
+
+  &:not([open]) {
+    display: none;
+  }
+  &::backdrop {
+    background: none;
+  }
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: #08080ad1;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  transition: opacity 0.42s var(--e-out);
+
+  .lightbox[data-state='open'] & {
+    opacity: 1;
+  }
+}
+
+.frame {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100vw - 2 * var(--pad), (100dvh - 2 * var(--pad) - var(--bar)) * var(--ratio), 84rem * var(--ratio) / 1.7778);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #000;
+  box-shadow:
+    0 2.5rem 7rem #000000b3,
+    0 0 0 1px #ffffff14;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+
+  &:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+
+    .media {
+      aspect-ratio: auto;
+      height: 100vh;
+    }
+    .film {
+      object-fit: contain;
+    }
+  }
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ratio);
+  background: #000;
+  cursor: pointer;
+}
+.film {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.bigPlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transform: translate(-50%, -50%) scale(0.86);
+  transition:
+    opacity var(--d-fast) var(--e-out),
+    transform var(--d-normal) var(--e-out);
+
+  svg {
+    width: 38%;
+    margin-left: 6%;
+  }
+  .frame[data-paused='true'] & {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 4px;
+  }
+}
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin: -1.3rem 0 0 -1.3rem;
+  border: 2px solid #ffffff38;
+  border-top-color: var(--paper);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--d-fast) var(--e-out) 0.25s;
+
+  .frame[data-waiting='true'] & {
+    opacity: 1;
+    animation: spin 0.8s linear infinite;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── controls ───────────────────────────────────────────────
+.controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  display: grid;
+  gap: 0.55rem;
+  padding: 3.5rem 1.15rem 0.9rem;
+  background: linear-gradient(to top, #000000d6, #00000080 55%, transparent);
+  transition:
+    opacity var(--d-normal) var(--e-out),
+    transform var(--d-normal) var(--e-out);
+
+  .frame[data-idle='true'] & {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.5rem);
+  }
+}
+.frame[data-idle='true'] .media {
+  cursor: none;
+}
+
+.meta {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.caption {
+  margin: 0;
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
+  font-weight: var(--w-display);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.context {
+  margin: 0;
+  overflow: hidden;
+  color: #f3f3efb8;
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.range {
+  --fill: 0%;
+
+  width: 100%;
+  height: 1.1rem;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--blue) var(--fill), #ffffff3d var(--fill));
+  }
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: #ffffff3d;
+  }
+  &::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--blue);
+  }
+  &::-webkit-slider-thumb {
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-top: calc(2px - 0.425rem);
+    border: 0;
+    border-radius: 50%;
+    background: var(--paper);
+    appearance: none;
+    transition: transform var(--d-fast) var(--e-out);
+  }
+  &::-moz-range-thumb {
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+  &:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.spacer {
+  flex: 1;
+}
+.button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding: 0 0.45rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: inherit;
+  background: none;
+  font: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-ui);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background var(--d-fast) var(--e-out);
+
+  svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: currentColor;
+  }
+  &:hover {
+    background: #ffffff1f;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+}
+.time {
+  padding-inline: 0.35rem;
+  color: #f3f3efd9;
+  font-size: var(--t-label);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+
+  .range {
+    width: 0;
+    opacity: 0;
+    transition:
+      width var(--d-normal) var(--e-out),
+      opacity var(--d-fast) var(--e-out);
+  }
+  &:hover .range,
+  &:focus-within .range {
+    width: 5rem;
+    margin-inline: 0.2rem 0.4rem;
+    opacity: 1;
+  }
+}
+
+.close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--paper);
+  opacity: 0;
+  cursor: pointer;
+  transition:
+    opacity var(--d-normal) var(--e-out),
+    transform var(--d-normal) var(--e-out);
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    fill: none;
+  }
+  .lightbox[data-state='open'] & {
+    opacity: 1;
+  }
+  &:hover {
+    transform: rotate(90deg);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+}
+
+// small or touch screens: the controls sit under the picture, always visible
+@media (max-width: 47.99rem), (pointer: coarse) {
+  .lightbox {
+    --pad: 0.75rem;
+    --bar: 9.5rem;
+  }
+  .frame {
+    border-radius: 14px;
+    background: #0b0b0d;
+  }
+  .controls {
+    position: relative;
+    padding: 0.85rem 0.9rem 0.8rem;
+    background: #0b0b0d;
+  }
+  .frame[data-idle='true'] .controls {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+  .frame[data-idle='true'] .media {
+    cursor: pointer;
+  }
+  .volume .range {
+    display: none;
+  }
+  .button {
+    min-width: 2.75rem;
+    height: 2.75rem;
+  }
+  .frame:fullscreen .controls {
+    position: absolute;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .close,
+  .controls,
+  .bigPlay {
+    transition-duration: 1ms;
+  }
+}

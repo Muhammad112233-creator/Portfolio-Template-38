@@ -1,0 +1,711 @@
+// The floating rail at the bottom of the screen and the menu that grows out of it.
+
+.shell {
+  position: fixed;
+  bottom: var(--rail-inset);
+  left: 50%;
+  z-index: var(--z-nav);
+  width: min(100% - var(--gutter) * 2, 28.5rem);
+  height: var(--rail-h);
+  isolation: isolate;
+  color: #f3f3efeb;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 0.75rem);
+  transition:
+    opacity 0.62s var(--e-out) 0.42s,
+    transform 0.76s var(--e-editorial) 0.38s,
+    color 0.46s var(--e-editorial);
+
+  &[data-active='true'] {
+    opacity: 1;
+    transform: translate(-50%);
+  }
+  &[data-immersive='true'] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.75rem);
+    transition:
+      opacity 0.32s var(--e-out),
+      transform 0.42s var(--e-editorial);
+  }
+  &[data-footer-end='true'] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, calc(100% + var(--rail-inset)));
+    transition:
+      opacity 0.26s var(--e-out),
+      transform 0.42s var(--e-editorial);
+  }
+  &[data-hero-scrolling='true'] {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.75rem);
+    transition:
+      opacity 0.14s var(--e-out),
+      transform 0.18s var(--e-editorial);
+  }
+}
+
+.frame {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: manipulation;
+  border: 1px solid #eef1ff1f;
+  background:
+    linear-gradient(112deg, #ffffff12, #0000 28% 76%, #ffffff06),
+    #07090d9e;
+  box-shadow:
+    0 0.9rem 2.4rem #0000003d,
+    inset 0 1px #ffffff24,
+    inset 0 0 0 1px #ffffff0a;
+  -webkit-backdrop-filter: blur(28px) saturate(1.65) brightness(0.94);
+  backdrop-filter: blur(28px) saturate(1.65) brightness(0.94);
+  clip-path: inset(calc(100% - var(--rail-h)) 0 0);
+  transition:
+    clip-path 0.56s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.42s var(--e-out),
+    box-shadow 0.42s var(--e-out),
+    background-color 0.42s var(--e-out);
+  will-change: clip-path;
+
+  .shell[data-immersive='true'] &,
+  .shell[data-footer-end='true'] &,
+  .shell[data-hero-scrolling='true'] &,
+  .shell[data-active='false'] & {
+    pointer-events: none;
+  }
+  .shell[data-open='true'] & {
+    clip-path: inset(0);
+  }
+}
+
+// ── themes ─────────────────────────────────────────────────
+.shell[data-theme='light'],
+.skinLight {
+  color: #10100fe6;
+
+  .frame {
+    border-color: #10100f1f;
+    background:
+      linear-gradient(135deg, #ffffff9e, #0000 32% 70%, #765cff17),
+      #f7f7f4d1;
+    box-shadow:
+      0 1.15rem 3rem #10100f1f,
+      inset 0 1px #fff9,
+      inset 0 -1px #7e6eff14;
+  }
+  .current {
+    color: #10100fdb;
+
+    &:hover {
+      color: #101010;
+    }
+  }
+  .mark {
+    color: #10100fe6;
+  }
+  .signature {
+    color: #10100feb;
+  }
+}
+.shell[data-theme='light'] {
+  .menuList a {
+    color: #10100fcc;
+  }
+  .menuList a:hover,
+  .menuList a:focus-visible,
+  .menuList li[data-current='true'] a,
+  .cta {
+    color: #101010;
+  }
+  .cta::before {
+    background: #101010;
+  }
+  .cta:hover,
+  .cta:focus-visible {
+    color: #fff;
+  }
+}
+
+// the after-hours films lend the rail their accent colour
+.shell[data-tinted='true'] {
+  color: var(--nav-accent, #f3f3efeb);
+
+  .frame {
+    border-color: color-mix(in srgb, currentColor 18%, transparent);
+    background:
+      linear-gradient(112deg, #ffffff0d, transparent 28% 76%, color-mix(in srgb, currentColor 5%, transparent)),
+      #050506eb;
+    box-shadow:
+      0 0.9rem 2.4rem #00000052,
+      inset 0 1px 0 color-mix(in srgb, currentColor 16%, transparent),
+      inset 0 0 0 1px #ffffff08;
+  }
+  .mark,
+  .current,
+  .signature {
+    color: inherit;
+  }
+  .current:hover {
+    color: color-mix(in srgb, currentColor 72%, white);
+  }
+  .smoke i {
+    background: linear-gradient(180deg, color-mix(in srgb, currentColor 0%, transparent), color-mix(in srgb, currentColor 76%, transparent));
+  }
+  .signatureTip {
+    background: color-mix(in srgb, currentColor 78%, white);
+    box-shadow:
+      0 0 0.3rem color-mix(in srgb, currentColor 74%, transparent),
+      0 0 0.7rem color-mix(in srgb, currentColor 48%, transparent);
+  }
+}
+
+// ── the bar itself ─────────────────────────────────────────
+.bar {
+  position: relative;
+  z-index: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 1fr) minmax(0, auto) minmax(4.5rem, 1fr);
+  align-items: center;
+  min-height: var(--rail-h);
+  padding-inline: 0.65rem;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.12;
+    pointer-events: none;
+    transition: opacity 0.1s var(--e-out) 0.44s;
+  }
+  // closed, this hairline is the top edge of the rail; open, the menu and the bar read as one surface
+  .shell[data-open='true'] &::after {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+}
+
+.wordmark,
+.current,
+.menuButton {
+  position: relative;
+  z-index: 1;
+}
+
+.wordmark {
+  display: grid;
+  place-items: center start;
+  justify-self: start;
+  min-width: 4.5rem;
+  min-height: 2.25rem;
+}
+.logoSwap {
+  position: relative;
+  display: block;
+  width: 4.4rem;
+  height: 1.72rem;
+  overflow: visible;
+}
+.mark,
+.signature {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.mark {
+  color: #f5f5f2e0;
+  transform-origin: 20% 55%;
+  transition:
+    opacity 0.36s var(--e-out) 0.42s,
+    filter 0.44s var(--e-out) 0.36s,
+    transform 0.62s var(--e-editorial) 0.34s;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 2.5rem;
+    height: 1.1rem;
+    overflow: visible;
+    transform: translateY(-50%);
+  }
+}
+.smoke {
+  position: absolute;
+  top: -0.74rem;
+  left: 0.04rem;
+  width: 2.42rem;
+  height: 1.42rem;
+  pointer-events: none;
+
+  i {
+    position: absolute;
+    bottom: 0;
+    width: 0.28rem;
+    height: 0.82rem;
+    border-radius: 50%;
+    background: linear-gradient(#a985ff00, #b28fffc2);
+    filter: blur(1.8px);
+    opacity: 0;
+    transform-origin: 50% 100%;
+    animation: smoke-rise 2.8s ease-out infinite;
+    will-change: transform, opacity;
+  }
+  i:nth-child(1) {
+    left: 0.14rem;
+  }
+  i:nth-child(2) {
+    left: 0.48rem;
+    height: 0.96rem;
+    animation-duration: 3.15s;
+    animation-delay: -1.75s;
+  }
+  i:nth-child(3) {
+    left: 0.84rem;
+    animation-duration: 2.55s;
+    animation-delay: -0.85s;
+  }
+  i:nth-child(4) {
+    left: 1.18rem;
+    height: 1.02rem;
+    animation-duration: 3.4s;
+    animation-delay: -2.25s;
+  }
+  i:nth-child(5) {
+    left: 1.56rem;
+    animation-duration: 2.75s;
+    animation-delay: -1.2s;
+  }
+  i:nth-child(6) {
+    left: 1.92rem;
+    height: 0.9rem;
+    animation-duration: 3.05s;
+    animation-delay: -2.65s;
+  }
+}
+@keyframes smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0.22rem) scaleX(0.72);
+  }
+  24% {
+    opacity: 0.82;
+  }
+  70% {
+    opacity: 0.38;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0.2rem, -1.08rem) scaleX(1.55) rotate(11deg);
+  }
+}
+
+// the handwritten name that replaces the mark on hover
+.signature {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: #f7f7f4f5;
+  font-family: 'Caveat', 'Figtree', cursive;
+  font-size: 1.62rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  clip-path: inset(-20% 100% -20% 0);
+  transform: translate(-0.12rem) scale(0.94);
+  transform-origin: 0 50%;
+  transition:
+    clip-path 0.48s cubic-bezier(0.55, 0, 0.7, 0.35),
+    opacity 0.18s var(--e-out) 0.32s,
+    transform 0.48s var(--e-editorial);
+}
+.signatureTip {
+  position: absolute;
+  top: 14%;
+  right: -0.12rem;
+  width: 0.22rem;
+  height: 72%;
+  border-radius: 50%;
+  background: #b397ffb8;
+  box-shadow:
+    0 0 0.3rem #9a6fffb8,
+    0 0 0.7rem #578bff73;
+  opacity: 0;
+}
+.wordmark:hover,
+.wordmark:focus-visible {
+  .mark {
+    opacity: 0;
+    filter: blur(0.18rem);
+    transform: translate(-0.2rem) scale(0.78);
+    transition:
+      opacity 0.17s var(--e-out),
+      filter 0.22s var(--e-out),
+      transform 0.42s var(--e-editorial);
+  }
+  .signature {
+    opacity: 1;
+    clip-path: inset(-20% 0 -20% 0);
+    transform: translate(0) scale(1);
+    transition:
+      clip-path 1.15s cubic-bezier(0.45, 0, 0.2, 1) 0.19s,
+      opacity 0.14s var(--e-out) 0.19s,
+      transform 1.15s var(--e-editorial) 0.19s;
+  }
+  .signatureTip {
+    animation: signature-tip 1.15s cubic-bezier(0.45, 0, 0.2, 1) 0.19s forwards;
+  }
+}
+@keyframes signature-tip {
+  0%,
+  7% {
+    right: calc(100% - 0.12rem);
+    opacity: 0;
+  }
+  16%,
+  82% {
+    opacity: 0.9;
+  }
+  100% {
+    right: -0.12rem;
+    opacity: 0;
+  }
+}
+
+.current,
+.menuButton,
+.cta {
+  font-size: var(--t-label);
+  font-weight: 560;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.current {
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.55rem 0.65rem;
+  color: #f3f3efdb;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: color var(--d-fast) var(--e-out);
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.menuButton {
+  display: grid;
+  place-content: center;
+  justify-self: end;
+  gap: 0.38rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+
+  span {
+    display: block;
+    width: 1.35rem;
+    height: 1px;
+    background: currentColor;
+    transform-origin: 50%;
+    transition:
+      transform 0.26s cubic-bezier(0.4, 0, 0.8, 0.2),
+      width 0.22s cubic-bezier(0.4, 0, 0.8, 0.2);
+  }
+  &:hover span:first-child {
+    width: 1.15rem;
+    transform: translate(0.18rem);
+  }
+  &:hover span:last-child {
+    width: 1.15rem;
+    transform: translate(-0.18rem);
+  }
+  .shell[data-open='true'] & span:first-child,
+  .skin[data-open='true'] & span:first-child {
+    width: 1.45rem;
+    transform: translateY(0.22rem) rotate(45deg);
+    transition-duration: 0.38s;
+    transition-timing-function: var(--e-editorial);
+  }
+  .shell[data-open='true'] & span:last-child,
+  .skin[data-open='true'] & span:last-child {
+    width: 1.45rem;
+    transform: translateY(-0.22rem) rotate(-45deg);
+    transition-duration: 0.38s;
+    transition-timing-function: var(--e-editorial);
+  }
+}
+
+// ── the menu ───────────────────────────────────────────────
+.menuViewport {
+  grid-row: 1;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  .shell[data-open='true'] & {
+    pointer-events: auto;
+  }
+}
+.menuPanel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: calc(100svh - var(--rail-inset) - var(--rail-h) - 1rem - env(safe-area-inset-top, 0px));
+  padding: clamp(1.7rem, 3vw, 2.15rem);
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.2s var(--e-out),
+    visibility 0s linear 0.5s;
+
+  .shell[data-open='true'] & {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity 0.3s var(--e-out) 0.08s,
+      visibility 0s;
+  }
+}
+.menuList {
+  display: grid;
+  gap: clamp(0.42rem, 0.8vw, 0.62rem);
+  list-style: none;
+
+  li {
+    opacity: 0;
+    transform: translateY(0.9rem);
+    transition:
+      opacity 0.2s var(--e-out),
+      transform 0.2s var(--e-out);
+  }
+  .shell[data-open='true'] & li {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.5s var(--e-out) calc(0.12s + var(--i) * 0.045s),
+      transform 0.7s var(--e-out) calc(0.12s + var(--i) * 0.045s);
+  }
+
+  a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 0.1rem;
+    color: #f3f3efe0;
+    font-size: clamp(1.74rem, 3.6vw, 2.2rem);
+    font-weight: 380;
+    line-height: 1.02;
+    letter-spacing: -0.018em;
+    overflow-wrap: anywhere;
+    transition:
+      color var(--d-fast) var(--e-out),
+      transform 0.36s var(--e-editorial);
+  }
+  a:hover,
+  a:focus-visible,
+  li[data-current='true'] a {
+    color: #fff;
+    transform: translate(0.22rem);
+  }
+}
+
+// each letter sits in a little window and rolls to a copy of itself
+.slotLabel {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.1em 0.28em;
+  min-width: 0;
+}
+.slotWord {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.016em;
+  min-width: 0;
+}
+.slotWindow {
+  display: inline-block;
+  flex: none;
+  height: 1.02em;
+  overflow: hidden;
+}
+.slotGlyph {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--c) * 22ms);
+  will-change: transform;
+
+  > span {
+    display: block;
+    height: 1.02em;
+    line-height: 1.02;
+  }
+}
+.menuList a:hover .slotGlyph,
+.menuList a:focus-visible .slotGlyph {
+  transform: translateY(-50%);
+}
+
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 1.65rem;
+  margin-top: clamp(0.9rem, 2vw, 1.25rem);
+  padding: 0.24rem 0.38rem;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f3f3ef;
+  background: none;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  transition:
+    color 0.12s var(--e-out),
+    opacity 0.2s var(--e-out);
+
+  .shell[data-open='true'] & {
+    opacity: 1;
+    transition:
+      color 0.12s var(--e-out),
+      opacity 0.5s var(--e-out) 0.42s;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #f3f3ef;
+    transform: scaleX(0);
+    transform-origin: 100%;
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover,
+  &:focus-visible {
+    color: #101010;
+    transition-duration: 0.14s;
+    transition-delay: 35ms;
+  }
+  &:hover::before,
+  &:focus-visible::before {
+    transform: scaleX(1);
+    transform-origin: 0;
+    transition-duration: 0.24s;
+  }
+}
+
+// ── the light copy that follows the diagonal wipe ──────────
+.skin {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: calc(var(--z-nav) + 1);
+  width: 100%;
+  height: var(--screen);
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: var(--wipe-clip, polygon(0 100%, 0 100%, 0 100%));
+  will-change: clip-path;
+
+  &[data-active='true'] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .skinRail {
+    position: absolute;
+    bottom: var(--rail-inset);
+    left: 50%;
+    width: min(100% - var(--gutter) * 2, 28.5rem);
+    height: var(--rail-h);
+    transform: translate(-50%);
+  }
+  .frame {
+    clip-path: none;
+    pointer-events: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background:
+      linear-gradient(135deg, #ffffffcc, #fff0 32% 70%, #765cff17),
+      #f4f4f1;
+  }
+}
+
+@media (max-width: 46rem) {
+  .shell,
+  .skin .skinRail {
+    bottom: calc(1.1rem + env(safe-area-inset-bottom, 0px));
+    width: min(100% - 2rem, 22rem);
+  }
+  .menuPanel {
+    max-height: calc(100svh - 1.1rem - env(safe-area-inset-bottom, 0px) - var(--rail-h) - 1rem - env(safe-area-inset-top, 0px));
+  }
+  .menuList a {
+    font-size: clamp(1.78rem, 8vw, 2.2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smoke {
+    display: none;
+  }
+  .wordmark:hover .mark,
+  .wordmark:focus-visible .mark {
+    filter: none;
+    transform: none;
+  }
+  .wordmark:hover .signatureTip,
+  .wordmark:focus-visible .signatureTip {
+    display: none;
+  }
+  .menuList a:hover .slotGlyph,
+  .menuList a:focus-visible .slotGlyph {
+    transform: none;
+  }
+  .shell,
+  .frame,
+  .menuPanel,
+  .menuList li,
+  .menuList a,
+  .menuButton span,
+  .slotGlyph,
+  .cta,
+  .cta::before,
+  .mark,
+  .signature {
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+  }
+}

@@ -1,0 +1,284 @@
+.cover {
+  --cover-lift: var(--rail-clear, 0px);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: var(--screen);
+  padding: clamp(2.5rem, 7vh, 5rem) var(--gutter);
+  padding-bottom: calc(clamp(2.5rem, 7vh, 5rem) + var(--cover-lift));
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--ink);
+  background: var(--gallery);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background-image: var(--grain-light);
+    background-size: 256px;
+    mix-blend-mode: multiply;
+    opacity: var(--grain);
+  }
+}
+
+.copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.75rem, 1.8vh, 1.25rem);
+  width: min(100%, 64rem);
+  text-align: center;
+}
+
+.title {
+  max-width: 18ch;
+  margin: 0;
+  font-size: clamp(2.45rem, 6.8vw, 6.8rem);
+  font-weight: var(--w-display);
+  line-height: 0.94;
+  letter-spacing: var(--track-display);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+
+  @media not (min-width: 48rem) {
+    max-width: 14ch;
+    font-size: clamp(2.15rem, 10vw, 4.5rem);
+  }
+  // keep the title and the reel on one screen when the window is short
+  @media (min-width: 48rem) and (max-height: 50rem) {
+    font-size: clamp(2.45rem, min(6.8vw, 10.5vh), 6.8rem);
+  }
+}
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+// ── showreel ───────────────────────────────────────────────
+.reel {
+  position: relative;
+  display: block;
+  width: min(100%, 71.1111vh, 46rem);
+  margin: clamp(0.5rem, 2vh, 1.5rem) 0 0;
+  isolation: isolate;
+  color: var(--ink);
+}
+.stage {
+  position: relative;
+  display: block;
+}
+.frame {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  outline: 1px solid var(--line);
+  color: var(--paper);
+  background: var(--void);
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 5px;
+  }
+}
+.film {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.42rem 0.62rem;
+  color: var(--paper);
+  background: color-mix(in srgb, var(--void) 72%, transparent);
+  font-size: var(--t-label);
+  font-weight: var(--w-ui);
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.cue {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.9rem;
+  z-index: 3;
+  display: block;
+  pointer-events: none;
+
+  // on a mouse, the label follows the pointer around the frame
+  &[data-follow='true'] {
+    inset: 0 auto auto 0;
+    will-change: transform;
+
+    .label {
+      background: color-mix(in srgb, var(--void) 84%, transparent);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+.sound {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 0.85rem;
+  z-index: 3;
+  display: grid;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--paper);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover .label {
+    background: color-mix(in srgb, var(--blue) 76%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cue,
+  .sound {
+    opacity: 0;
+    transition: opacity var(--d-fast) var(--e-out);
+  }
+  .sound {
+    pointer-events: none;
+  }
+  .stage:hover .cue,
+  .stage:hover .sound,
+  .stage:focus-within .cue,
+  .stage:focus-within .sound {
+    opacity: 1;
+  }
+  .stage:hover .sound,
+  .stage:focus-within .sound {
+    pointer-events: auto;
+  }
+  .stage:has(.sound:is(:hover, :focus-visible)) .cue {
+    opacity: 0;
+  }
+}
+
+.edge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--void) 45%, transparent);
+  pointer-events: none;
+  transition: height var(--d-fast) var(--e-out);
+}
+.edgeFill {
+  position: absolute;
+  inset: 0;
+  background: var(--blue);
+  transform: scaleX(0);
+  transform-origin: 0;
+}
+.stage:hover .edge,
+.stage:has(.scrub:focus-visible) .edge {
+  height: 4px;
+}
+.stage:has(.scrub:focus-visible) .edge {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.scrub {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+
+  &::-webkit-slider-thumb {
+    width: 1.1rem;
+    height: 1.1rem;
+    background: none;
+    appearance: none;
+  }
+  &::-moz-range-thumb {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: none;
+    background: none;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .stage {
+    --touch: 44px;
+    --seek-outset: 22px;
+
+    padding-bottom: var(--seek-outset);
+  }
+  .sound,
+  .cue {
+    bottom: calc(var(--touch) + 2px);
+    min-height: var(--touch);
+  }
+  .sound {
+    min-width: var(--touch);
+  }
+  .cue {
+    display: grid;
+    align-items: center;
+  }
+  .scrub {
+    height: var(--touch);
+  }
+  .edge {
+    bottom: var(--seek-outset);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge,
+  .scrub {
+    display: none;
+  }
+}

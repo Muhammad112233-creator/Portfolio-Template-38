@@ -1,0 +1,428 @@
+// After hours: three personal films share one pinned screen. Each brings its
+// own colours and typeface, and each arrives with a different kind of cut.
+
+.films {
+  position: relative;
+  z-index: 6;
+  isolation: isolate;
+  overflow: clip;
+  color: var(--ink);
+  background: var(--gallery);
+}
+
+.stage {
+  position: relative;
+}
+
+.chapters {
+  display: grid;
+  gap: clamp(1.5rem, 4vh, 3rem);
+  margin: 0;
+  padding: clamp(2rem, 6vh, 4rem) 0;
+  list-style: none;
+}
+
+.chapter {
+  position: relative;
+  isolation: isolate;
+  color: var(--film-ink);
+}
+.chapterInner {
+  position: relative;
+  display: flex;
+  min-height: min(40rem, 80vh);
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--film-paper);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain-dark);
+    background-size: 256px;
+    mix-blend-mode: screen;
+    opacity: 0.35;
+  }
+}
+// the "wipe" cut: the ground rolls up from the bottom like mist
+.chapter[data-cut='wipe'] .ground {
+  --film-wipe: 1;
+
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 calc(var(--film-wipe) * 170% - 70%),
+    transparent calc(var(--film-wipe) * 170% - 12%)
+  );
+  mask-image: linear-gradient(to top, #000 calc(var(--film-wipe) * 170% - 70%), transparent calc(var(--film-wipe) * 170% - 12%));
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.glow {
+  position: absolute;
+  inset: -20%;
+  z-index: 1;
+  background: radial-gradient(50% 56% at 50% 44%, var(--film-glow) 0%, transparent 68%);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  width: min(100%, 82rem);
+  margin-inline: auto;
+  padding: clamp(2rem, 5vh, 3.5rem) var(--gutter);
+}
+
+.head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.75rem, 1.6vh, 1.25rem);
+}
+.title {
+  max-width: 100%;
+  margin: 0;
+  font-family: var(--film-font, var(--font));
+  font-size: calc(clamp(2.6rem, 6.2vw, 5.6rem) * var(--film-title-scale, 1));
+  font-weight: var(--film-title-weight, 600);
+  line-height: var(--film-title-leading, 1);
+  letter-spacing: var(--film-title-tracking, -0.04em);
+  text-transform: var(--film-title-case, none);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+// each typeface gets the small adjustments it needs to sit well
+.chapter[data-font='collage'] .title {
+  --film-font: 'Special Elite', 'Courier New', monospace;
+  --film-title-weight: 400;
+  --film-title-leading: 1.02;
+}
+.chapter[data-font='collage'] .letter {
+  display: inline-block;
+  padding: 0.04em 0.1em 0;
+  margin-inline: 0.015em;
+
+  &:nth-child(4n + 1) {
+    color: var(--film-paper);
+    background: var(--film-ink);
+    transform: rotate(-3deg) translateY(0.03em);
+  }
+  &:nth-child(4n + 2) {
+    font-family: 'Anton', Impact, sans-serif;
+    transform: rotate(2deg);
+  }
+  &:nth-child(4n + 3) {
+    color: var(--film-paper);
+    background: var(--film-glow);
+    transform: rotate(-1.5deg) translateY(-0.04em);
+  }
+  &:nth-child(4n) {
+    font-family: 'Anton', Impact, sans-serif;
+    color: var(--film-ink);
+    background: var(--film-accent);
+    transform: rotate(3.5deg);
+  }
+}
+.chapter[data-font='poster'] .title {
+  --film-font: 'Anton', Impact, 'Arial Narrow', sans-serif;
+  --film-title-weight: 400;
+  --film-title-leading: 0.98;
+}
+.chapter[data-font='engraved'] .title {
+  --film-font: 'Cinzel', 'Times New Roman', serif;
+  --film-title-weight: 500;
+  --film-title-leading: 1.05;
+}
+// an inscription: every word opens with a taller capital
+.chapter[data-font='engraved'] .word {
+  display: inline-block;
+
+  &::first-letter {
+    font-size: 1.3em;
+  }
+}
+
+.kicker {
+  max-width: 28rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--film-ink) 72%, transparent);
+  font-size: var(--t-body);
+  line-height: var(--lead-read);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.frame {
+  position: relative;
+  display: block;
+  justify-self: center;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: color-mix(in srgb, var(--film-ink) 6%, transparent);
+  cursor: pointer;
+  transition:
+    transform var(--d-slow) var(--e-out),
+    box-shadow var(--d-slow) var(--e-out);
+
+  &:focus-visible {
+    outline: 2px solid var(--film-accent);
+    outline-offset: 6px;
+  }
+}
+.chapter[data-cut='hard'] .frame {
+  border-radius: 0;
+  box-shadow: 0.55rem 0.55rem 0 var(--film-accent);
+  transform: rotate(-1.2deg);
+}
+.chapter[data-cut='dissolve'] .frame {
+  border-radius: 0.35rem;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--film-accent) 60%, transparent),
+    0 2rem 5rem #03000894,
+    0 0 6rem color-mix(in srgb, var(--film-accent) 22%, transparent);
+}
+.chapter[data-cut='wipe'] .frame {
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px var(--film-accent),
+    0 0 0 7px color-mix(in srgb, var(--film-ink) 14%, transparent);
+}
+
+.video,
+.poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.5) brightness(0.68);
+  pointer-events: none;
+  transition: filter var(--d-slow) var(--e-out);
+}
+.video {
+  z-index: 1;
+  opacity: 0;
+
+  &[data-ready='true'] {
+    opacity: 1;
+  }
+}
+.frame[data-active='true'] .video,
+.frame[data-active='true'] .poster {
+  filter: none;
+}
+
+.play {
+  position: absolute;
+  top: clamp(0.9rem, 2vw, 1.5rem);
+  right: clamp(0.9rem, 2vw, 1.5rem);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(2.4rem, 3.4vw, 3.2rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  color: var(--film-paper);
+  background: var(--film-accent);
+  opacity: 0;
+  transform: scale(0.7);
+  transition:
+    opacity var(--d-normal) var(--e-out),
+    transform var(--d-normal) var(--e-out);
+
+  svg {
+    width: 42%;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .frame:hover .play,
+  .frame:focus-visible .play {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .frame:hover .video,
+  .frame:hover .poster {
+    filter: none;
+  }
+  .chapter[data-cut='hard'] .frame:hover {
+    box-shadow: 0.9rem 0.9rem 0 var(--film-accent);
+    transform: rotate(-1.2deg) translate(-0.2rem, -0.2rem);
+  }
+  .chapter[data-cut='dissolve'] .frame:hover {
+    box-shadow:
+      0 0 0 1px var(--film-accent),
+      0 2.4rem 6rem #030008a3,
+      0 0 9rem color-mix(in srgb, var(--film-accent) 34%, transparent);
+  }
+  .chapter[data-cut='wipe'] .frame:hover {
+    box-shadow:
+      0 0 0 1px var(--film-accent),
+      0 0 0 12px color-mix(in srgb, var(--film-ink) 14%, transparent);
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .play {
+    opacity: 0.92;
+    transform: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    padding-block: clamp(1.5rem, 4vh, 3rem);
+  }
+  .frame {
+    width: auto;
+    max-width: 100%;
+    height: min(58vh, 100%);
+  }
+}
+
+@media not (min-width: 64rem) {
+  .glow {
+    inset: 0;
+    background: none;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 56%;
+      left: 50%;
+      width: min(78vw, 21rem);
+      aspect-ratio: var(--film-ratio, 1 / 1);
+      border-radius: 14%;
+      background: var(--film-glow);
+      filter: blur(clamp(2.75rem, 10vw, 4.25rem));
+      opacity: 0.34;
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+// ── pinned: every chapter is stacked on one sticky screen ──
+@media (prefers-reduced-motion: no-preference) {
+  .films[data-stage='pinned'] {
+    height: calc(var(--film-screens, 4.5) * var(--screen));
+
+    // until the screen is pinned, the section is a window onto the cover below
+    &[data-paint='waiting'] {
+      background: none;
+      pointer-events: none;
+
+      .layout {
+        pointer-events: none;
+      }
+    }
+
+    .stage {
+      position: sticky;
+      top: 0;
+      height: var(--screen);
+      overflow: clip;
+
+      // same grain as the paper sections on either side, so the joins are invisible
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: var(--grain-light);
+        background-size: 256px;
+        mix-blend-mode: multiply;
+        opacity: var(--grain);
+        pointer-events: none;
+      }
+    }
+    &[data-paint='waiting'] .stage::before {
+      display: none;
+    }
+    .chapters {
+      position: absolute;
+      inset: 0;
+      display: block;
+      padding-block: 0;
+    }
+    .chapter {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .chapterInner {
+      height: 100%;
+      min-height: 0;
+    }
+    .layout {
+      height: 100%;
+      padding-bottom: calc(var(--rail-clear) * 0.55);
+      pointer-events: auto;
+    }
+    .ground,
+    .glow,
+    .layout {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+}
+@media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+  .films[data-stage='pinned'] {
+    margin-top: calc(-0.85 * var(--screen));
+  }
+}
+@media (not (min-width: 64rem)) and (prefers-reduced-motion: no-preference) {
+  .films[data-stage='pinned'] {
+    margin-top: calc(-1 * var(--screen));
+
+    .layout {
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: center;
+      gap: clamp(1.75rem, 4svh, 2.5rem);
+      padding-block: clamp(4.75rem, 11svh, 6.5rem) calc(var(--rail-clear) + clamp(1rem, 2.5svh, 1.5rem));
+    }
+    .head {
+      gap: clamp(0.45rem, 1svh, 0.75rem);
+    }
+    .title {
+      font-size: calc(clamp(2.15rem, 10vw, 3.25rem) * var(--film-title-scale, 1));
+    }
+    .kicker {
+      font-size: clamp(0.9rem, 3.8vw, 1rem);
+      line-height: 1.35;
+    }
+    .frame {
+      width: auto;
+      max-width: 100%;
+      max-height: min(48svh, 25rem);
+    }
+    .chapter[data-cut='hard'] .frame {
+      max-height: min(43svh, 21rem);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video,
+  .poster {
+    filter: none;
+  }
+}

@@ -1,0 +1,83 @@
+// Quick cuts → after hours. The light table folds into a card, turns over,
+// and comes back as the "Night shift" cover.
+//
+// The runway overlaps the end of the Shorts section, so the first half of
+// the turn is played by the real Shorts stage underneath it and the second
+// half by the cover in here.
+
+.runway {
+  position: relative;
+  z-index: 5;
+  height: calc(2.65 * var(--screen));
+  margin-top: calc(-1.7 * var(--screen));
+  pointer-events: none;
+}
+
+.mark {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.viewport {
+  position: sticky;
+  top: 0;
+  height: var(--screen);
+  overflow: hidden;
+}
+
+.void {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  visibility: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain-dark);
+    background-size: 256px;
+    opacity: 0.5;
+  }
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.runway[data-turned='true'] {
+  .void,
+  .card {
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runway {
+    height: auto;
+    margin-top: 0;
+    pointer-events: auto;
+  }
+  .viewport {
+    position: static;
+    height: auto;
+  }
+  .void {
+    display: none;
+  }
+  .card {
+    position: relative;
+    inset: auto;
+    visibility: visible;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,338 @@
+// Vertical pieces, laid out like prints on a light table.
+
+.table {
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+
+  // The stage later folds into a card (see CardShift). A spacer below it gives
+  // the stage room to stay stuck meanwhile, and the table itself is the black
+  // tabletop that shows around the card.
+  &[data-still='false'] {
+    background: #000;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: var(--grain-dark);
+      background-size: 256px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    &::after {
+      content: '';
+      display: block;
+      height: var(--screen);
+    }
+  }
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: var(--screen);
+  padding-block: clamp(4rem, 10svh, 6rem) calc(var(--rail-clear) + 2rem);
+  background: var(--gallery);
+
+  .table[data-still='false'] & {
+    position: sticky;
+    // taller than the screen on small devices: stick once its bottom edge arrives
+    top: var(--stick-top, 0px);
+    z-index: 1;
+    // fold around the middle of the part that is on screen
+    transform-origin: 50% calc(100% - var(--screen) / 2);
+  }
+  // while folding, only one screen of the stage forms the card
+  &[data-folding='true'] {
+    clip-path: inset(max(0px, calc(100% - var(--screen))) 0 0 0 round var(--card-radius, 0px));
+    will-change: transform;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background-image: var(--grain-light);
+    background-size: 256px;
+    mix-blend-mode: multiply;
+    opacity: var(--grain);
+  }
+}
+
+@media (min-width: 64rem) {
+  .table[data-still='false'] .stage {
+    height: var(--screen);
+    min-height: 0;
+    padding-block: clamp(2.5rem, 7svh, 4.5rem) calc(var(--rail-clear) + clamp(1.5rem, 4svh, 3rem));
+    overflow: hidden;
+  }
+}
+
+.inner {
+  display: grid;
+  gap: clamp(2rem, 5svh, 3.5rem);
+  width: 100%;
+  max-width: 82rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 4rem);
+}
+
+.head {
+  display: block;
+  max-width: 36rem;
+}
+.title {
+  margin: 0;
+  font-size: clamp(2.2rem, 4.2vw, 4.5rem);
+  font-weight: var(--w-display);
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+}
+.note {
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: var(--t-ui);
+  line-height: 1.25;
+}
+
+.strips {
+  display: grid;
+  grid-auto-columns: minmax(min(54vw, 11.75rem), 1fr);
+  grid-auto-flow: column;
+  align-items: start;
+  gap: clamp(1.2rem, 3vw, 2.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.strip {
+  display: grid;
+  align-content: start;
+  gap: clamp(0.8rem, 1.5svh, 1.05rem);
+  min-width: 0;
+
+  &:nth-child(2) {
+    margin-block-start: clamp(3.5rem, 8svh, 5.25rem);
+  }
+  &:nth-child(3) {
+    margin-block-start: clamp(1.25rem, 3svh, 2rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .inner {
+    grid-template-columns: minmax(13rem, 0.62fr) minmax(0, 2.15fr);
+    align-items: center;
+    column-gap: clamp(3rem, 6vw, 6.5rem);
+  }
+  .head {
+    max-width: 15rem;
+  }
+  .title {
+    font-size: clamp(2.45rem, 4vw, 4.25rem);
+  }
+  .strips {
+    grid-auto-columns: minmax(0, min(13rem, 24.5svh));
+    justify-content: space-between;
+  }
+  .strip:nth-child(2) {
+    margin-block-start: clamp(6.5rem, 14svh, 8.25rem);
+  }
+  .strip:nth-child(3) {
+    margin-block-start: clamp(2.25rem, 5svh, 3.5rem);
+  }
+}
+
+// small screens: the prints are scattered down the page instead
+@media not (min-width: 64rem) {
+  .table {
+    overflow-x: clip;
+  }
+  .stage {
+    align-items: flex-start;
+    padding-block: clamp(4rem, 9svh, 5.5rem) calc(var(--rail-clear) + 3.5rem);
+  }
+  .inner {
+    gap: clamp(2.75rem, 7svh, 4rem);
+    padding-inline: clamp(1.15rem, 5vw, 1.5rem);
+  }
+  .strips {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-columns: auto;
+    grid-auto-flow: row;
+    gap: clamp(3rem, 10svh, 5rem);
+    padding: 0 0 1.5rem;
+  }
+  .strip {
+    width: clamp(13rem, 72vw, 17.5rem);
+
+    &:nth-child(1) {
+      justify-self: start;
+      rotate: -1.05deg;
+    }
+    &:nth-child(2) {
+      justify-self: end;
+      width: clamp(12.75rem, 69vw, 17rem);
+      margin-block-start: clamp(0.75rem, 2.5svh, 1.35rem);
+      rotate: 1.25deg;
+    }
+    &:nth-child(3) {
+      justify-self: start;
+      width: clamp(13.25rem, 74vw, 18rem);
+      margin-block-start: 0;
+      margin-inline-start: clamp(1.75rem, 8vw, 3.5rem);
+      rotate: -0.45deg;
+    }
+  }
+}
+
+.frameButton {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border: 0;
+  outline: 0 solid #0000;
+  outline-offset: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: bottom;
+  transition:
+    outline-color var(--d-fast) var(--e-out),
+    transform 0.82s var(--e-out);
+
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+}
+// the print is uncovered from the bottom up
+.frameReveal {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+  clip-path: inset(100% 0 0);
+  transition: clip-path 1.2s var(--e-editorial);
+  transition-delay: calc(var(--i) * 0.12s);
+
+  .table[data-shown='true'] & {
+    clip-path: inset(0);
+  }
+}
+.frameMedia {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: var(--void);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    box-shadow: inset 0 0 0 1px #f7f7f157;
+    opacity: 0.62;
+    pointer-events: none;
+    transform: scale(1);
+    transition:
+      opacity 0.72s var(--e-out),
+      transform 0.92s var(--e-out);
+  }
+}
+.frame {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.035) brightness(0.96);
+  transform: scale(1.014);
+  transition:
+    opacity 0.76s var(--e-out),
+    filter 0.76s var(--e-out),
+    transform 0.92s var(--e-out);
+}
+video.frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+
+  &[data-ready='true'] {
+    opacity: 1;
+  }
+}
+
+.caption {
+  display: block;
+  overflow: hidden;
+}
+.word {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.1vw, 1.75rem);
+  font-weight: var(--w-display);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  transform: translateY(110%);
+  transition:
+    opacity 0.68s var(--e-out),
+    color 0.52s var(--e-out),
+    transform 0.9s var(--e-out) calc(0.35s + var(--i) * 0.12s);
+
+  .table[data-shown='true'] & {
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .strips:has(.frameButton:hover) .strip:not(:has(.frameButton:hover)) .frame {
+    opacity: 0.68;
+    filter: saturate(0.38) contrast(0.99) brightness(1.025);
+    transform: scale(1.009);
+  }
+  .strips:has(.frameButton:hover) .strip:not(:has(.frameButton:hover)) .word {
+    opacity: 0.56;
+  }
+  .frameButton:hover {
+    transform: translateY(-0.25rem);
+  }
+  .frameButton:hover .frameMedia::after {
+    opacity: 0.92;
+    transform: scale(0.958, 0.982);
+  }
+  .frameButton:hover .frame {
+    filter: saturate(1) contrast(1.015) brightness(1);
+    transform: scale(1.032);
+  }
+  .strip:has(.frameButton:hover) .word {
+    color: var(--blue);
+    transform: translate(0.12em);
+    transition-delay: 0s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frameButton,
+  .frameReveal,
+  .frameMedia,
+  .frameMedia::after,
+  .frame,
+  .word {
+    transition-duration: 1ms;
+    transition-delay: 0s;
+  }
+  .frame {
+    transform: none;
+  }
+}

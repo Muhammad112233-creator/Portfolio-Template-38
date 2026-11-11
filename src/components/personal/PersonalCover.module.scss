@@ -1,0 +1,231 @@
+// Title card for the after-hours work: one dark square on light paper, with
+// type that inverts and splits into colour where it crosses the square.
+
+.cover {
+  --media-left: 55vw;
+  --media-width: clamp(10.5rem, 22vw, 19rem);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: var(--screen);
+  padding: clamp(2.5rem, 7vh, 5rem) var(--gutter);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--ink);
+  background: var(--gallery);
+
+  @media (min-width: 100rem) {
+    --media-left: min(55vw, 52rem);
+    --media-width: clamp(22rem, min(20vw, 48svh), 32rem);
+  }
+  @media not (min-width: 48rem) {
+    --media-width: clamp(9rem, 42vw, 14rem);
+    --media-left: calc(100vw + 2.5rem - var(--media-width));
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background-image: var(--grain-light);
+    background-size: 256px;
+    mix-blend-mode: multiply;
+    opacity: var(--grain);
+  }
+}
+
+.media {
+  position: absolute;
+  top: 50%;
+  left: var(--media-left);
+  z-index: 1;
+  width: var(--media-width);
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--void);
+  transform: translateY(-44%);
+
+  @media not (min-width: 48rem) {
+    top: 45%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background:
+      linear-gradient(#00010857, #00010857),
+      radial-gradient(80% 76% at 50% 48%, #0000 24%, #01030c9e 100%);
+    box-shadow: inset 0 0 3.5rem #00020ab8;
+    pointer-events: none;
+  }
+}
+.image,
+.tint {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 56%;
+  filter: blur(clamp(9px, 1.2vw, 15px)) grayscale(0.38) brightness(0.54) contrast(1.34) saturate(0.88);
+  transform: scale(1.08);
+}
+.tint {
+  inset: -12%;
+  background:
+    radial-gradient(64% 80% at 14% 48%, #00daee 0%, #006fa4 48%, #0000 78%),
+    radial-gradient(62% 76% at 88% 36%, #5325d9 0%, #1b3bb1c7 50%, #0000 76%),
+    linear-gradient(118deg, #00aacd 0%, #06488e 58%, #411492 100%);
+  mix-blend-mode: color;
+  opacity: 0.2;
+  transform: rotate(-4deg) scale(1.08);
+}
+
+// Paper-coloured type in "difference" mode reads dark on the paper and light
+// on the square, without knowing where the square is.
+.title {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  color: var(--gallery);
+  font-size: clamp(3rem, 8.3vw, 8.2rem);
+  font-weight: var(--w-display);
+  line-height: 0.88;
+  letter-spacing: -0.072em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  mix-blend-mode: difference;
+}
+.line {
+  display: block;
+  // room for descenders and the tight tracking; nothing may clip the ghosts
+  padding: 0.06em 0.08em 0.1em 0;
+  overflow: hidden;
+}
+.lineInner,
+.descriptionText {
+  position: relative;
+  display: block;
+
+  // two colour ghosts, visible only where the text crosses the square
+  &::before,
+  &::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  &::before {
+    color: var(--cyan);
+    opacity: 0.3;
+    clip-path: polygon(var(--blend-left) 0, var(--blend-right) 0, var(--blend-right) 53%, var(--blend-left) 53%);
+    animation: ghost-cyan 2.4s steps(2, end) infinite;
+  }
+  &::after {
+    color: #ff633f;
+    opacity: 0.24;
+    clip-path: polygon(var(--blend-left) 47%, var(--blend-right) 47%, var(--blend-right) 100%, var(--blend-left) 100%);
+    animation: ghost-coral 2.4s steps(2, end) infinite;
+  }
+}
+.lineInner {
+  --blend-left: calc(var(--media-left) - var(--gutter));
+  --blend-right: calc(var(--media-left) + var(--media-width) - var(--gutter));
+
+  will-change: transform;
+}
+
+.descriptionGroup {
+  --offset: clamp(0rem, 8vw, 8rem);
+  --blend-left: calc(var(--media-left) - var(--gutter) - var(--offset));
+  --blend-right: calc(var(--media-left) + var(--media-width) - var(--gutter) - var(--offset));
+
+  // Careful: this wrapper must not become a stacking context (no z-index,
+  // opacity or transform here), or the blend below stops seeing the page.
+  position: relative;
+  max-width: 36rem;
+  margin-top: clamp(2rem, 6vh, 4.5rem);
+  margin-left: var(--offset);
+  font-size: clamp(1rem, 0.9rem + 0.35vw, 1.25rem);
+  line-height: var(--lead-read);
+  text-wrap: pretty;
+
+  @media not (min-width: 48rem) {
+    --offset: 0rem;
+
+    max-width: 30rem;
+  }
+}
+.description {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  // in "difference" mode black is invisible, so fading means mixing from black
+  color: color-mix(in srgb, var(--gallery) calc(var(--reveal, 1) * 100%), #000);
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  mix-blend-mode: difference;
+}
+.descriptionText::before {
+  opacity: calc(0.3 * var(--reveal, 1));
+}
+.descriptionText::after {
+  opacity: calc(0.24 * var(--reveal, 1));
+}
+.emoji {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  inset-inline-end: calc(100% + 0.45em);
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .emoji {
+    display: block;
+    transition: opacity 0.16s ease-out;
+  }
+  .description:hover + .emoji {
+    opacity: 1;
+  }
+}
+
+@keyframes ghost-cyan {
+  0%,
+  100% {
+    transform: translate(-1.4px);
+  }
+  50% {
+    transform: translate(-2.1px, 0.4px);
+  }
+}
+@keyframes ghost-coral {
+  0%,
+  100% {
+    transform: translate(1.4px);
+  }
+  50% {
+    transform: translate(2.1px, -0.4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lineInner::before,
+  .lineInner::after,
+  .descriptionText::before,
+  .descriptionText::after {
+    animation: none;
+  }
+}
